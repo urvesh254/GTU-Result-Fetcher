@@ -1,10 +1,10 @@
-<<<<<<< HEAD
+
 images/
 .vscode
 __pycache__
 *.jpg
 test.py
-=======
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -134,4 +134,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
->>>>>>> ce9432f7e18f2f60c34088d01fec7e33a218e25e
