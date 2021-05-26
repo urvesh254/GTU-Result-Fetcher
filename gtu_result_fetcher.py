@@ -6,7 +6,7 @@ import random
 PATH = "./driver/chromedriver.exe"
 URL = "https://www.gturesults.in/"
 CAPTCHA_FILE_NAME = ".captcha.jpg"
-INPUT_FILE_NAME = "./input/enrollmentlist.txt"
+INPUT_FILE_NAME = "./input/input.txt"
 RESULT_FILE_NAME = "./Result/result.csv"
 ENROLLMENT_LIST = ["180320107540"]
 
@@ -65,7 +65,7 @@ def search():
 # Check whether captcha is valid or not.
 def is_invalid_captcha():
     message = driver.find_element_by_id("lblmsg").get_attribute("innerHTML")
-    return True if "ERROR" in message else False
+    return False if "Sorry" in message or "Congratulation" in message else True
 
 
 # Printing Student Result.
@@ -134,6 +134,8 @@ set_exam(".....BE SEM 5 - Regular (JAN 2021)")
 results = [
     "Name, Enrollment No., Seat No., Exam, Branch, Current Backlog, Toatl Backlog, SPI, CPI, CGPA"
 ]
+
+print(ENROLLMENT_LIST)
 for index, enrollment in enumerate(ENROLLMENT_LIST):
     set_enrollment(enrollment)
     is_invalid = True
@@ -142,6 +144,7 @@ for index, enrollment in enumerate(ENROLLMENT_LIST):
         set_captcha()
         search()
         is_invalid = is_invalid_captcha()
+        print(is_invalid)
 
     print(f"\n{index+1}. {enrollment} result is fetched.")
     results.append(print_result())
@@ -158,3 +161,5 @@ except:
 
 
 print(f"\nToatal {len(results)-1} result are fetched.")
+
+driver.close()
