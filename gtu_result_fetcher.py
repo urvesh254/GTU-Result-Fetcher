@@ -6,7 +6,7 @@ import random
 PATH = "./driver/chromedriver.exe"
 URL = "https://www.gturesults.in/"
 CAPTCHA_FILE_NAME = ".captcha.jpg"
-INPUT_FILE_NAME = "./input/input.txt"
+INPUT_FILE_NAME = "./input/enrollmentlist.txt"
 RESULT_FILE_NAME = "./Result/result.csv"
 ENROLLMENT_LIST = ["180320107540"]
 
@@ -113,7 +113,7 @@ def store_result(file, data):
 """ ------------------- Main Program --------------------- """
 
 # Getting enrollment list form file
-# ENROLLMENT_LIST = get_enrollment_data(INPUT_FILE_NAME)
+ENROLLMENT_LIST = get_enrollment_data(INPUT_FILE_NAME)
 
 # Loading the model for recogniting text from image.
 reader = easyocr.Reader(["en"])
@@ -121,6 +121,7 @@ reader = easyocr.Reader(["en"])
 """ Without Opening Browser """
 option = webdriver.ChromeOptions()
 option.add_argument("headless")
+option.add_argument("--disable-logging")
 driver = webdriver.Chrome(PATH, options=option)
 driver.get(URL)
 
