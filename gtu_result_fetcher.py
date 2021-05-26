@@ -5,9 +5,10 @@ import random
 
 PATH = "./driver/chromedriver.exe"
 URL = "https://www.gturesults.in/"
-FILE_NAME = ".captcha.jpg"
-RESULT_FILE_NAME = "result.csv"
-ENROLLMENT_LIST = ["180320107540", "180320107533", "180320107529", "180320107097"]
+CAPTCHA_FILE_NAME = ".captcha.jpg"
+INPUT_FILE_NAME = "./input/input.txt"
+RESULT_FILE_NAME = "./Result/result.csv"
+ENROLLMENT_LIST = ["180320107540"]
 
 # Set exam type.
 def set_exam(exam_name):
@@ -37,7 +38,7 @@ def set_enrollment(enrollment):
 # Locate the captcha and save in the captcha.png
 def get_captcha():
     captcha = driver.find_element_by_id("imgCaptcha")
-    with open(FILE_NAME, "wb") as file:
+    with open(CAPTCHA_FILE_NAME, "wb") as file:
         file.write(captcha.screenshot_as_png)
 
 
@@ -47,7 +48,7 @@ def set_captcha():
     get_captcha()
 
     # Recognition text from captcha.
-    text = reader.readtext(FILE_NAME, detail=0)[0]
+    text = reader.readtext(CAPTCHA_FILE_NAME, detail=0)[0]
 
     # Set captcha in captcha field.
     captcha_el = driver.find_element_by_id("CodeNumberTextBox")
@@ -80,6 +81,7 @@ def print_result():
     cpi = driver.find_element_by_id("lblCPI").get_attribute("innerHTML")
     cgpa = driver.find_element_by_id("lblCGPA").get_attribute("innerHTML")
 
+    '''
     result = f"""\n\n
     ** Student Info **
     Name : {name}
@@ -96,7 +98,8 @@ def print_result():
     CGPA = {cgpa}
     \n"""
 
-    # print(result)
+    print(result)
+    '''
 
     return f"{name},{enrollment},{seatno},{exam},{branch},{curr_backlog},{total_backlog},{spi},{cpi},{cgpa}"
 
@@ -110,7 +113,7 @@ def store_result(file, data):
 """ ------------------- Main Program --------------------- """
 
 # Getting enrollment list form file
-# ENROLLMENT_LIST = get_enrollment_data("input.txt")
+# ENROLLMENT_LIST = get_enrollment_data(INPUT_FILE_NAME)
 
 # Loading the model for recogniting text from image.
 reader = easyocr.Reader(["en"])
@@ -139,18 +142,18 @@ for index, enrollment in enumerate(ENROLLMENT_LIST):
         search()
         is_invalid = is_invalid_captcha()
 
-    print(f"\n{index}. {enrollment} result is fetched.")
+    print(f"\n{index+1}. {enrollment} result is fetched.")
     results.append(print_result())
 
 # Storing data in csv file.
 try:
     store_result(RESULT_FILE_NAME, results)
-    print(f"Result stored in {RESULT_FILE_NAME}")
+    print(f"\nResult stored in {RESULT_FILE_NAME}")
 except:
-    print(f"Problem to open {RESULT_FILE_NAME}.")
+    print(f"\nProblem to open {RESULT_FILE_NAME}.")
     new_file = f"{RESULT_FILE_NAME[:-4]}_{random.randint(100,2000)}.csv"
     store_result(new_file, results)
-    print(f"Result stored in {new_file}")
+    print(f"\nResult stored in {new_file}")
 
 
 print(f"\nToatal {len(results)-1} result are fetched.")
