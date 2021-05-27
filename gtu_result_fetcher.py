@@ -135,7 +135,6 @@ results = [
     "Name, Enrollment No., Seat No., Exam, Branch, Current Backlog, Toatl Backlog, SPI, CPI, CGPA"
 ]
 
-print(ENROLLMENT_LIST)
 for index, enrollment in enumerate(ENROLLMENT_LIST):
     set_enrollment(enrollment)
     is_invalid = True
@@ -144,7 +143,6 @@ for index, enrollment in enumerate(ENROLLMENT_LIST):
         set_captcha()
         search()
         is_invalid = is_invalid_captcha()
-        print(is_invalid)
 
     print(f"\n{index+1}. {enrollment} result is fetched.")
     results.append(print_result())
