@@ -2,10 +2,11 @@ from selenium import webdriver  # for webdriver
 from selenium.webdriver.support.ui import Select
 import easyocr
 import random
+import os
 
 PATH = "./driver/chromedriver.exe"
 URL = "https://www.gturesults.in/"
-CAPTCHA_FILE_NAME = ".captcha.jpg"
+CAPTCHA_FILE_NAME = "captcha.jpg"
 INPUT_FILE_NAME = "./input/input.txt"
 RESULT_FILE_NAME = "./Result/result.csv"
 ENROLLMENT_LIST = ["180320107540"]
@@ -157,7 +158,7 @@ except:
     store_result(new_file, results)
     print(f"\nResult stored in {new_file}")
 
-
+os.system(f"del {CAPTCHA_FILE_NAME}")
 print(f"\nToatal {len(results)-1} result are fetched.")
 
 driver.close()
