@@ -1,3 +1,4 @@
+from requests.api import request
 from selenium import webdriver  # for webdriver
 from selenium.webdriver.support.ui import Select
 import easyocr
@@ -6,13 +7,14 @@ import os
 
 PATH = "./driver/chromedriver.exe"
 URL = "https://www.gturesults.in/"
+EXAM_NAME = ".....BE SEM 5 - Regular (JAN 2021)"
 CAPTCHA_FILE_NAME = "captcha.jpg"
 INPUT_FILE_NAME = "./input/input.txt"
 RESULT_FILE_NAME = "./Result/result.csv"
 ENROLLMENT_LIST = ["180320107540"]
 
 # Set exam type.
-def set_exam(exam_name):
+def set_exam(driver, exam_name):
     exam_drop_down = driver.find_element_by_id("ddlbatch")
     exam_list = Select(exam_drop_down)
     exam_list.select_by_visible_text(exam_name)
@@ -30,23 +32,23 @@ def get_enrollment_data(file):
 
 
 # Set enrollment no.
-def set_enrollment(enrollment):
+def set_enrollment(driver, enrollment):
     enrollment_el = driver.find_element_by_id("txtenroll")
     enrollment_el.clear()
     enrollment_el.send_keys(enrollment)
 
 
 # Locate the captcha and save in the captcha.png
-def get_captcha():
+def get_captcha(driver):
     captcha = driver.find_element_by_id("imgCaptcha")
     with open(CAPTCHA_FILE_NAME, "wb") as file:
         file.write(captcha.screenshot_as_png)
 
 
 # Set captcha.
-def set_captcha():
+def set_captcha(driver, reader):
     # Getting the captcha from the website.
-    get_captcha()
+    get_captcha(driver)
 
     # Recognition text from captcha.
     text = reader.readtext(CAPTCHA_FILE_NAME, detail=0)[0]
@@ -58,19 +60,19 @@ def set_captcha():
 
 
 # Search result.
-def search():
+def search(driver):
     search_el = driver.find_element_by_id("btnSearch")
     search_el.click()
 
 
 # Check whether captcha is valid or not.
-def is_invalid_captcha():
+def is_invalid_captcha(driver):
     message = driver.find_element_by_id("lblmsg").get_attribute("innerHTML")
     return False if "Sorry" in message or "Congratulation" in message else True
 
 
 # Printing Student Result.
-def print_result():
+def print_result(driver):
     name = driver.find_element_by_id("lblName").get_attribute("innerHTML")
     enrollment = driver.find_element_by_id("lblEnrollmentNo").get_attribute("innerHTML")
     seatno = driver.find_element_by_id("lblExam").get_attribute("innerHTML")
@@ -113,52 +115,61 @@ def store_result(file, data):
 
 """ ------------------- Main Program --------------------- """
 
-# Getting enrollment list form file
-ENROLLMENT_LIST = get_enrollment_data(INPUT_FILE_NAME)
 
-# Loading the model for recogniting text from image.
-reader = easyocr.Reader(["en"])
+def main():
+    # Getting enrollment list form file
+    ENROLLMENT_LIST = get_enrollment_data(INPUT_FILE_NAME)
 
-""" Without Opening Browser """
-option = webdriver.ChromeOptions()
-option.add_argument("headless")
-option.add_argument("--disable-logging")
-driver = webdriver.Chrome(PATH, options=option)
-driver.get(URL)
+    # Loading the model for recogniting text from image.
+    reader = easyocr.Reader(["en"])
 
-""" With Browser """
-# driver = webdriver.Chrome(PATH)
-# driver.get(URL)
+    """ Without Opening Browser """
+    option = webdriver.ChromeOptions()
+    option.add_argument("headless")
+    option.add_argument("--disable-logging")
+    driver = webdriver.Chrome(PATH, options=option)
+    driver.get(URL)
 
-# Setting the information and search.
-set_exam(".....BE SEM 5 - Regular (JAN 2021)")
-results = [
-    "Name, Enrollment No., Seat No., Exam, Branch, Current Backlog, Toatl Backlog, SPI, CPI, CGPA"
-]
+    """ With Browser """
+    # driver = webdriver.Chrome(PATH)
+    # driver.get(URL)
 
-for index, enrollment in enumerate(ENROLLMENT_LIST):
-    set_enrollment(enrollment)
-    is_invalid = True
-    while is_invalid:
-        # print(f"retring..... {enrollment}")
-        set_captcha()
-        search()
-        is_invalid = is_invalid_captcha()
+    # Setting the information and search.
+    set_exam(driver, EXAM_NAME)
+    results = [
+        "Name, Enrollment No., Seat No., Exam, Branch, Current Backlog, Toatl Backlog, SPI, CPI, CGPA"
+    ]
 
-    print(f"\n{index+1}. {enrollment} result is fetched.")
-    results.append(print_result())
+    for index, enrollment in enumerate(ENROLLMENT_LIST):
+        set_enrollment(driver, enrollment)
+        is_invalid = True
+        while is_invalid:
+            set_captcha(driver, reader)
+            search(driver)
+            is_invalid = is_invalid_captcha(driver)
 
-# Storing data in csv file.
+        print(f"\n{index+1}. {enrollment} result is fetched.")
+        results.append(print_result(driver))
+
+    # Storing data in csv file.
+    try:
+        store_result(RESULT_FILE_NAME, results)
+        print(f"\nResult stored in {RESULT_FILE_NAME}")
+    except:
+        print(f"\nProblem to open {RESULT_FILE_NAME}.")
+        new_file = f"{RESULT_FILE_NAME[:-4]}_{random.randint(100,2000)}.csv"
+        store_result(new_file, results)
+        print(f"\nResult stored in {new_file}")
+
+    os.system(f"del {CAPTCHA_FILE_NAME}")
+    print(f"\nToatal {len(results)-1} result are fetched.")
+
+    driver.close()
+
+
 try:
-    store_result(RESULT_FILE_NAME, results)
-    print(f"\nResult stored in {RESULT_FILE_NAME}")
+    main()
+except KeyboardInterrupt:
+    print("User exits....")
 except:
-    print(f"\nProblem to open {RESULT_FILE_NAME}.")
-    new_file = f"{RESULT_FILE_NAME[:-4]}_{random.randint(100,2000)}.csv"
-    store_result(new_file, results)
-    print(f"\nResult stored in {new_file}")
-
-os.system(f"del {CAPTCHA_FILE_NAME}")
-print(f"\nToatal {len(results)-1} result are fetched.")
-
-driver.close()
+    pass
